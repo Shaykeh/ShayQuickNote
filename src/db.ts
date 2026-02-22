@@ -7,6 +7,7 @@ export interface Note {
   folderId: string | null;
   tags: string[];
   isPinned: boolean;
+  isArchived: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -25,6 +26,13 @@ const db = new Dexie('QuickNoteDB') as Dexie & {
 db.version(1).stores({
   notes: 'id, folderId, isPinned, createdAt, updatedAt, *tags',
   folders: 'id, name',
+});
+
+db.version(2).stores({
+  notes: 'id, folderId, isPinned, isArchived, createdAt, updatedAt, *tags',
+  folders: 'id, name',
+}).upgrade((tx) => {
+  return tx.table('notes').toCollection().modify({ isArchived: false });
 });
 
 export { db };

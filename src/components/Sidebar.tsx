@@ -10,8 +10,10 @@ interface SidebarProps {
   allTags: string[];
   activeFolderId: string | null;
   activeTagFilter: string | null;
+  isArchiveView: boolean;
   onSelectFolder: (id: string | null) => void;
   onSelectTag: (tag: string | null) => void;
+  onSelectArchive: () => void;
   theme: Theme;
   onSetTheme: (t: Theme) => void;
 }
@@ -23,8 +25,10 @@ export function Sidebar({
   allTags,
   activeFolderId,
   activeTagFilter,
+  isArchiveView,
   onSelectFolder,
   onSelectTag,
+  onSelectArchive,
   theme,
   onSetTheme,
 }: SidebarProps) {
@@ -137,7 +141,7 @@ export function Sidebar({
                   onClose();
                 }}
                 className={`w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg text-sm min-h-[44px] ${
-                  !activeFolderId && !activeTagFilter
+                  !activeFolderId && !activeTagFilter && !isArchiveView
                     ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
@@ -146,6 +150,24 @@ export function Sidebar({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
                 </svg>
                 All Notes
+              </button>
+
+              {/* Archive */}
+              <button
+                onClick={() => {
+                  onSelectArchive();
+                  onClose();
+                }}
+                className={`w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg text-sm min-h-[44px] ${
+                  isArchiveView
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+                Archive
               </button>
 
               {folders.map((folder) => (

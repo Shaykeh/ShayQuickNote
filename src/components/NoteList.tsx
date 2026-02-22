@@ -5,9 +5,12 @@ interface NoteListProps {
   notes: Note[];
   folders: Folder[];
   selectedNoteId: string | null;
+  isArchiveView: boolean;
   onSelectNote: (id: string) => void;
   onDeleteNote: (id: string) => void;
   onTogglePin: (id: string, isPinned: boolean) => void;
+  onArchiveNote: (id: string) => void;
+  onUnarchiveNote: (id: string) => void;
 }
 
 function formatDate(iso: string): string {
@@ -33,9 +36,12 @@ export function NoteList({
   notes,
   folders,
   selectedNoteId,
+  isArchiveView,
   onSelectNote,
   onDeleteNote,
   onTogglePin,
+  onArchiveNote,
+  onUnarchiveNote,
 }: NoteListProps) {
   const folderMap = new Map(folders.map((f) => [f.id, f.name]));
 
@@ -44,9 +50,13 @@ export function NoteList({
       {notes.length === 0 && (
         <div className="flex flex-col items-center justify-center h-48 text-gray-400 dark:text-gray-500">
           <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            {isArchiveView ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            )}
           </svg>
-          <p className="text-sm">No notes yet</p>
+          <p className="text-sm">{isArchiveView ? 'No archived notes' : 'No notes yet'}</p>
         </div>
       )}
       {notes.map((note) => (
@@ -95,18 +105,47 @@ export function NoteList({
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTogglePin(note.id, note.isPinned);
-                }}
-                className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-400"
-                aria-label={note.isPinned ? 'Unpin note' : 'Pin note'}
-              >
-                <svg className="w-4 h-4" fill={note.isPinned ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
-                </svg>
-              </button>
+              {isArchiveView ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUnarchiveNote(note.id);
+                  }}
+                  className="p-1.5 rounded hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-400 hover:text-green-600"
+                  aria-label="Restore note"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onArchiveNote(note.id);
+                  }}
+                  className="p-1.5 rounded hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-400 hover:text-green-600"
+                  aria-label="Complete note"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              )}
+              {!isArchiveView && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTogglePin(note.id, note.isPinned);
+                  }}
+                  className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-400"
+                  aria-label={note.isPinned ? 'Unpin note' : 'Pin note'}
+                >
+                  <svg className="w-4 h-4" fill={note.isPinned ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+                  </svg>
+                </button>
+              )}
               <button
                 onClick={(e) => {
                   e.stopPropagation();

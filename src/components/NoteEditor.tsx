@@ -7,9 +7,11 @@ interface NoteEditorProps {
   noteId: string;
   onBack: () => void;
   onDelete: (id: string) => void;
+  onArchive: (id: string) => void;
+  onUnarchive: (id: string) => void;
 }
 
-export function NoteEditor({ noteId, onBack, onDelete }: NoteEditorProps) {
+export function NoteEditor({ noteId, onBack, onDelete, onArchive, onUnarchive }: NoteEditorProps) {
   const note = useLiveQuery(() => db.notes.get(noteId), [noteId]);
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
@@ -110,6 +112,28 @@ export function NoteEditor({ noteId, onBack, onDelete }: NoteEditorProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 6h.008v.008H6V6z" />
             </svg>
           </button>
+
+          {note.isArchived ? (
+            <button
+              onClick={() => onUnarchive(noteId)}
+              className="p-2 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-green-500 hover:text-green-600"
+              aria-label="Restore note"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              onClick={() => onArchive(noteId)}
+              className="p-2 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-green-600"
+              aria-label="Complete note"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          )}
 
           <button
             onClick={() => onDelete(noteId)}
