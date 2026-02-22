@@ -4,7 +4,7 @@ import { NoteEditor } from './components/NoteEditor';
 import { Sidebar } from './components/Sidebar';
 import { SearchBar } from './components/SearchBar';
 import { ConfirmDialog } from './components/ConfirmDialog';
-import { useNotes, createNote, deleteNote, togglePin, updateNote, type SortOrder } from './hooks/useNotes';
+import { useNotes, createNote, deleteNote, togglePin, updateNote, archiveNote, unarchiveNote, type SortOrder } from './hooks/useNotes';
 import { useFolders } from './hooks/useFolders';
 import { useAllTags } from './hooks/useAllTags';
 import { useDarkMode } from './hooks/useDarkMode';
@@ -19,6 +19,7 @@ export function App() {
   // Filter/sort state
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
+  const [isArchiveView, setIsArchiveView] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<SortOrder>('updatedAt');
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -31,7 +32,7 @@ export function App() {
   const [folderPickerNoteId, setFolderPickerNoteId] = useState<string | null>(null);
 
   // Data
-  const notes = useNotes(activeFolderId, activeTagFilter, searchQuery, sortOrder);
+  const notes = useNotes(activeFolderId, activeTagFilter, searchQuery, sortOrder, isArchiveView);
   const folders = useFolders();
   const allTags = useAllTags();
 
@@ -62,7 +63,35 @@ export function App() {
     setFolderPickerNoteId(null);
   }, []);
 
+  const handleArchiveNote = useCallback(async (id: string) => {
+    await archiveNote(id);
+    if (selectedNoteId === id) setSelectedNoteId(null);
+  }, [selectedNoteId]);
+
+  const handleUnarchiveNote = useCallback(async (id: string) => {
+    await unarchiveNote(id);
+    if (selectedNoteId === id) setSelectedNoteId(null);
+  }, [selectedNoteId]);
+
+  const handleSelectFolder = useCallback((id: string | null) => {
+    setActiveFolderId(id);
+    setIsArchiveView(false);
+    setActiveTagFilter(null);
+  }, []);
+
+  const handleSelectTag = useCallback((tag: string | null) => {
+    setActiveTagFilter(tag);
+    setIsArchiveView(false);
+  }, []);
+
+  const handleSelectArchive = useCallback(() => {
+    setIsArchiveView(true);
+    setActiveFolderId(null);
+    setActiveTagFilter(null);
+  }, []);
+
   const getTitle = () => {
+    if (isArchiveView) return 'Archive';
     if (activeTagFilter) return `#${activeTagFilter}`;
     if (activeFolderId) {
       const folder = folders.find((f) => f.id === activeFolderId);
@@ -79,6 +108,8 @@ export function App() {
           noteId={selectedNoteId}
           onBack={() => setSelectedNoteId(null)}
           onDelete={handleDeleteNote}
+          onArchive={handleArchiveNote}
+          onUnarchive={handleUnarchiveNote}
         />
         <ConfirmDialog
           isOpen={deleteTarget !== null}
@@ -101,8 +132,10 @@ export function App() {
         allTags={allTags}
         activeFolderId={activeFolderId}
         activeTagFilter={activeTagFilter}
-        onSelectFolder={setActiveFolderId}
-        onSelectTag={setActiveTagFilter}
+        isArchiveView={isArchiveView}
+        onSelectFolder={handleSelectFolder}
+        onSelectTag={handleSelectTag}
+        onSelectArchive={handleSelectArchive}
         theme={theme}
         onSetTheme={setTheme}
       />
@@ -177,21 +210,26 @@ export function App() {
         notes={notes}
         folders={folders}
         selectedNoteId={selectedNoteId}
+        isArchiveView={isArchiveView}
         onSelectNote={setSelectedNoteId}
         onDeleteNote={handleDeleteNote}
         onTogglePin={handleTogglePin}
+        onArchiveNote={handleArchiveNote}
+        onUnarchiveNote={handleUnarchiveNote}
       />
 
-      {/* FAB — Create Note */}
-      <button
-        onClick={handleCreateNote}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center safe-bottom transition-transform active:scale-95"
-        aria-label="Create new note"
-      >
-        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-      </button>
+      {/* FAB — Create Note (hidden in archive view) */}
+      {!isArchiveView && (
+        <button
+          onClick={handleCreateNote}
+          className="fixed bottom-6 right-6 w-14 h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center safe-bottom transition-transform active:scale-95"
+          aria-label="Create new note"
+        >
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      )}
 
       {/* Folder picker dialog */}
       {showFolderPicker && folderPickerNoteId && (

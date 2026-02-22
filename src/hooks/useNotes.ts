@@ -9,12 +9,20 @@ export function useNotes(
   tagFilter: string | null,
   searchQuery: string,
   sortOrder: SortOrder,
+  showArchived: boolean = false,
 ) {
   const notes = useLiveQuery(async () => {
     let collection = db.notes.toCollection();
     let results = await collection.toArray();
 
-    if (folderId) {
+    // Filter by archive status
+    if (showArchived) {
+      results = results.filter((n) => n.isArchived);
+    } else {
+      results = results.filter((n) => !n.isArchived);
+    }
+
+    if (folderId && !showArchived) {
       results = results.filter((n) => n.folderId === folderId);
     }
 
@@ -48,7 +56,7 @@ export function useNotes(
     });
 
     return results;
-  }, [folderId, tagFilter, searchQuery, sortOrder]);
+  }, [folderId, tagFilter, searchQuery, sortOrder, showArchived]);
 
   return notes ?? [];
 }
@@ -63,6 +71,7 @@ export async function createNote(folderId: string | null): Promise<string> {
     folderId,
     tags: [],
     isPinned: false,
+    isArchived: false,
     createdAt: now,
     updatedAt: now,
   });
@@ -83,6 +92,20 @@ export async function deleteNote(id: string) {
 export async function togglePin(id: string, currentPinned: boolean) {
   await db.notes.update(id, {
     isPinned: !currentPinned,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export async function archiveNote(id: string) {
+  await db.notes.update(id, {
+    isArchived: true,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export async function unarchiveNote(id: string) {
+  await db.notes.update(id, {
+    isArchived: false,
     updatedAt: new Date().toISOString(),
   });
 }
